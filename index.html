@@ -6,23 +6,19 @@
   <title>Recrutamentos da Tribo</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: sans-serif; max-width: 960px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
+    body { font-family: sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
     h1, h2 { color: #f4c430; }
-    input[type=text], input[type=date], input[type=number] {
-      padding: 8px; margin: 4px; border-radius: 6px; border: none;
-      background: #1e1e1e; color: #eee;
-    }
+    input[type=text], input[type=date], input[type=number] { padding: 8px; margin: 4px; border-radius: 6px; border: none; background: #1e1e1e; color: #eee; }
     input[type=text] { width: 220px; }
     input[type=number] { width: 100px; }
-    button {
-      padding: 8px 16px; background: #f4c430; color: #000;
-      border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
-    }
+    button { padding: 8px 16px; background: #f4c430; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
     button:hover { background: #e0b020; }
-    button.secondary {
-      background: #2a2a2a; color: #eee; border: 1px solid #444;
-    }
+    button.secondary { background: #2a2a2a; color: #eee; border: 1px solid #444; }
     button.secondary:hover { background: #3a3a3a; }
+    button.danger { background: #7a1e1e; color: #ffaaaa; border: none; }
+    button.danger:hover { background: #a02020; }
+    button.edit-btn { background: #1e3a5f; color: #7eb3ff; border: none; padding: 4px 10px; font-size: 12px; }
+    button.edit-btn:hover { background: #2a4f7a; }
     button:disabled { opacity: 0.4; cursor: default; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
     th, td { padding: 9px 10px; border-bottom: 1px solid #222; text-align: left; }
@@ -31,6 +27,7 @@
     .ranking-item { padding: 8px 0; border-bottom: 1px solid #1e1e1e; font-size: 14px; }
     .badge { background: #1e3a5f; color: #7eb3ff; padding: 2px 7px; border-radius: 4px; font-size: 11px; margin-left: 6px; }
     .old-nick { color: #555; font-size: 12px; }
+    .recrutado-cell { color: #aaa; font-size: 12px; }
     .empty { color: #555; font-style: italic; }
     label { color: #888; font-size: 12px; display: block; margin-top: 10px; margin-bottom: 2px; }
     .search-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
@@ -44,7 +41,15 @@
     .top-card .nick { font-size: 13px; font-weight: bold; color: #f4c430; margin: 4px 0; word-break: break-all; }
     .top-card .count { font-size: 20px; font-weight: bold; }
     details summary { cursor: pointer; color: #f4c430; font-size: 15px; font-weight: bold; margin: 16px 0 8px; user-select: none; }
-    details summary::marker { color: #f4c430; }
+    .hint { background: #1a1200; border-left: 3px solid #f4c430; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #aaa; margin: 8px 0 4px; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+    .modal-overlay.ativo { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 24px; width: 100%; max-width: 440px; }
+    .modal h3 { color: #f4c430; margin-top: 0; }
+    .modal input[type=text], .modal input[type=number], .modal input[type=date] { width: 100%; margin: 4px 0 8px; }
+    .modal-btns { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+    .admin-bar { background: #1a1200; border: 1px solid #f4c43033; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-size: 13px; }
+    .admin-indicator { color: #f4c430; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -52,17 +57,30 @@
 <h1>🗡️ Recrutamentos da Tribo</h1>
 <p style="color:#555; font-size:12px;">Período registrado: 17/11/2025 – 14/04/2026</p>
 
+<div class="admin-bar" id="admin-bar" style="display:none;">
+  <span class="admin-indicator">🔑 Modo Admin ativo</span>
+  <span style="color:#888;">Você pode editar e excluir registros na tabela.</span>
+  <button class="secondary" style="margin-left:auto; padding:4px 10px; font-size:12px;" onclick="sairAdmin()">Sair</button>
+</div>
+
+<div style="font-size:11px; color:#222; text-align:right; cursor:default;" onclick="ativarAdmin()">· · ·</div>
+
 <details>
   <summary>➕ Registrar Recrutamento</summary>
   <div style="padding: 8px 0 16px;">
-    <label>Nick atual *</label>
+    <div class="hint">⚔️ <strong>Recrutador</strong> = quem trouxe o player. &nbsp;|&nbsp; 👤 <strong>Recrutado</strong> = quem entrou na tribo.</div>
+
+    <label>Nick do Recrutador * (quem recrutou)</label>
     <input type="text" id="nick" placeholder="Ex: Gabrielmrr#7842" />
 
-    <label>Nick antigo (mesmo player, opcional)</label>
+    <label>Nick do Recrutado (quem foi recrutado, opcional)</label>
+    <input type="text" id="recrutado" placeholder="Ex: Doppw#0000" />
+
+    <label>Nick antigo do recrutador (se mudou de nick, opcional)</label>
     <input type="text" id="nick_antigo" placeholder="Ex: Xenon#9552" />
 
-    <label>Recrutamentos gerais *</label>
-    <input type="number" id="geral" min="1" placeholder="0" />
+    <label>Quantidade recrutada (geral) *</label>
+    <input type="number" id="geral" min="1" placeholder="1" />
 
     <label>Recrutamentos de evento (opcional)</label>
     <input type="number" id="evento" min="0" placeholder="0" />
@@ -94,13 +112,43 @@
 <table>
   <thead>
     <tr>
-      <th>#</th><th>Nick</th><th>Nick antigo</th><th>Geral</th><th>Evento</th><th>Data</th>
+      <th>#</th>
+      <th>Recrutador</th>
+      <th>Recrutado</th>
+      <th>Nick antigo</th>
+      <th>Geral</th>
+      <th>Evento</th>
+      <th>Data</th>
+      <th id="th-acoes" style="display:none;">Ações</th>
     </tr>
   </thead>
   <tbody id="tabela"></tbody>
 </table>
-
 <div class="pagination" id="paginacao"></div>
+
+<!-- Modal edição -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>✏️ Editar Registro</h3>
+    <input type="hidden" id="edit-key" />
+    <label>Nick do Recrutador *</label>
+    <input type="text" id="edit-nick" />
+    <label>Nick do Recrutado</label>
+    <input type="text" id="edit-recrutado" />
+    <label>Nick antigo do recrutador</label>
+    <input type="text" id="edit-nick-antigo" />
+    <label>Quantidade recrutada (geral) *</label>
+    <input type="number" id="edit-geral" min="0" />
+    <label>Recrutamentos de evento</label>
+    <input type="number" id="edit-evento" min="0" />
+    <label>Data</label>
+    <input type="date" id="edit-data" />
+    <div class="modal-btns">
+      <button class="secondary" onclick="fecharModal()">Cancelar</button>
+      <button onclick="salvarEdicao()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -119,21 +167,100 @@
   const db = firebase.database();
   const ref = db.ref("recrutamentos");
 
-  let todosDados = [];
+  let todosDadosComKey = {};
   let paginaAtual = 1;
   const POR_PAGINA = 30;
+  let modoAdmin = false;
+  let cliquesAdmin = 0;
+
+  function ativarAdmin() {
+    cliquesAdmin++;
+    if (cliquesAdmin >= 5) {
+      cliquesAdmin = 0;
+      const senha = prompt("🔑 Senha de admin:");
+      if (senha === "rbt2026") {
+        modoAdmin = true;
+        document.getElementById("admin-bar").style.display = "flex";
+        document.getElementById("th-acoes").style.display = "";
+        renderTabela();
+        alert("✅ Modo admin ativado!");
+      } else if (senha !== null) {
+        alert("❌ Senha incorreta.");
+      }
+    }
+  }
+
+  function sairAdmin() {
+    modoAdmin = false;
+    document.getElementById("admin-bar").style.display = "none";
+    document.getElementById("th-acoes").style.display = "none";
+    renderTabela();
+  }
 
   function registrar() {
     const nick       = document.getElementById("nick").value.trim();
+    const recrutado  = document.getElementById("recrutado").value.trim();
     const nick_antigo = document.getElementById("nick_antigo").value.trim();
     const geral      = parseInt(document.getElementById("geral").value) || 0;
     const evento     = parseInt(document.getElementById("evento").value) || 0;
     const data       = document.getElementById("data").value;
-    if (!nick)  return alert("⚠️ Nick atual é obrigatório!");
-    if (!geral) return alert("⚠️ Informe ao menos 1 recrutamento geral!");
-    ref.push({ nick, nick_antigo: nick_antigo || "—", geral, evento, data: data || "—" });
-    ["nick","nick_antigo","geral","evento","data"].forEach(id => document.getElementById(id).value = "");
+    if (!nick)  return alert("⚠️ Nick do recrutador é obrigatório!");
+    if (!geral) return alert("⚠️ Informe ao menos 1 recrutamento!");
+    ref.push({
+      nick,
+      recrutado: recrutado || "—",
+      nick_antigo: nick_antigo || "—",
+      geral,
+      evento,
+      data: data || "—"
+    });
+    ["nick","recrutado","nick_antigo","geral","evento","data"].forEach(id => document.getElementById(id).value = "");
   }
+
+  function abrirModal(key) {
+    const r = todosDadosComKey[key];
+    if (!r) return;
+    document.getElementById("edit-key").value = key;
+    document.getElementById("edit-nick").value = r.nick || r.recrutador || "";
+    document.getElementById("edit-recrutado").value = (r.recrutado && r.recrutado !== "—") ? r.recrutado : "";
+    document.getElementById("edit-nick-antigo").value = (r.nick_antigo && r.nick_antigo !== "—") ? r.nick_antigo : "";
+    document.getElementById("edit-geral").value = r.geral || 0;
+    document.getElementById("edit-evento").value = r.evento || 0;
+    document.getElementById("edit-data").value = (r.data && r.data !== "—") ? r.data : "";
+    document.getElementById("modal").classList.add("ativo");
+  }
+
+  function fecharModal() {
+    document.getElementById("modal").classList.remove("ativo");
+  }
+
+  function salvarEdicao() {
+    const key   = document.getElementById("edit-key").value;
+    const nick  = document.getElementById("edit-nick").value.trim();
+    const geral = parseInt(document.getElementById("edit-geral").value) || 0;
+    if (!nick)  return alert("⚠️ Nick é obrigatório!");
+    if (!geral) return alert("⚠️ Geral não pode ser zero!");
+    db.ref("recrutamentos/" + key).update({
+      nick,
+      recrutado: document.getElementById("edit-recrutado").value.trim() || "—",
+      nick_antigo: document.getElementById("edit-nick-antigo").value.trim() || "—",
+      geral,
+      evento: parseInt(document.getElementById("edit-evento").value) || 0,
+      data: document.getElementById("edit-data").value || "—"
+    });
+    fecharModal();
+  }
+
+  function excluirRegistro(key) {
+    const r = todosDadosComKey[key];
+    const nick = r ? (r.nick || r.recrutador || key) : key;
+    if (!confirm(`⚠️ Excluir o registro de "${nick}"?\nEssa ação não pode ser desfeita.`)) return;
+    db.ref("recrutamentos/" + key).remove();
+  }
+
+  document.getElementById("modal").addEventListener("click", function(e) {
+    if (e.target === this) fecharModal();
+  });
 
   function limparBusca() {
     document.getElementById("busca").value = "";
@@ -148,12 +275,16 @@
   function renderTabela() {
     const termo = document.getElementById("busca").value.toLowerCase();
     const ordem = document.getElementById("ordenar").value;
+    const cols  = modoAdmin ? 8 : 7;
 
-    let lista = [...todosDados].filter(r => {
-      const nick = (r.nick || r.recrutador || "").toLowerCase();
-      const ant  = (r.nick_antigo || "").toLowerCase();
-      return nick.includes(termo) || ant.includes(termo);
-    });
+    let lista = Object.entries(todosDadosComKey)
+      .map(([key, r]) => ({ ...r, _key: key }))
+      .filter(r => {
+        const nick = (r.nick || r.recrutador || "").toLowerCase();
+        const ant  = (r.nick_antigo || "").toLowerCase();
+        const rec  = (r.recrutado || "").toLowerCase();
+        return nick.includes(termo) || ant.includes(termo) || rec.includes(termo);
+      });
 
     if (ordem === "recente") lista.reverse();
     else if (ordem === "maior") lista.sort((a, b) => (b.geral || 0) - (a.geral || 0));
@@ -170,24 +301,26 @@
 
     const tabela = document.getElementById("tabela");
     tabela.innerHTML = fatia.length === 0
-      ? `<tr><td colspan="6" class="empty">Nenhum resultado encontrado.</td></tr>`
+      ? `<tr><td colspan="${cols}" class="empty">Nenhum resultado encontrado.</td></tr>`
       : fatia.map((r, i) =>
           `<tr>
             <td style="color:#555">${inicio + i + 1}</td>
             <td><strong>${r.nick || r.recrutador || "—"}</strong></td>
+            <td class="recrutado-cell">${r.recrutado || "—"}</td>
             <td class="old-nick">${r.nick_antigo || "—"}</td>
             <td>${r.geral ?? "—"}</td>
             <td>${(r.evento > 0) ? `<span class="badge">🎉 ${r.evento}</span>` : "—"}</td>
             <td>${r.data || "—"}</td>
+            ${modoAdmin ? `<td style="white-space:nowrap;">
+              <button class="edit-btn" onclick="abrirModal('${r._key}')">✏️</button>
+              <button class="danger" style="padding:4px 10px;font-size:12px;margin-left:4px;" onclick="excluirRegistro('${r._key}')">🗑️</button>
+            </td>` : ""}
           </tr>`
         ).join("");
 
-    // Paginação
     const pag = document.getElementById("paginacao");
     if (totalPags <= 1) { pag.innerHTML = ""; return; }
-
     let btns = `<button class="secondary" onclick="irPara(${paginaAtual - 1})" ${paginaAtual === 1 ? "disabled" : ""}>‹ Anterior</button>`;
-
     for (let p = 1; p <= totalPags; p++) {
       if (p === 1 || p === totalPags || Math.abs(p - paginaAtual) <= 2) {
         btns += `<button class="${p === paginaAtual ? "" : "secondary"}" onclick="irPara(${p})">${p}</button>`;
@@ -195,18 +328,13 @@
         btns += `<span>...</span>`;
       }
     }
-
     btns += `<button class="secondary" onclick="irPara(${paginaAtual + 1})" ${paginaAtual === totalPags ? "disabled" : ""}>Próximo ›</button>`;
     btns += `<span>Página ${paginaAtual} de ${totalPags}</span>`;
     pag.innerHTML = btns;
   }
 
   function irPara(p) {
-    const termo = document.getElementById("busca").value.toLowerCase();
-    const lista = todosDados.filter(r => {
-      const nick = (r.nick || r.recrutador || "").toLowerCase();
-      return nick.includes(termo);
-    });
+    const lista = Object.values(todosDadosComKey);
     const totalPags = Math.ceil(lista.length / POR_PAGINA);
     if (p < 1 || p > totalPags) return;
     paginaAtual = p;
@@ -215,10 +343,9 @@
   }
 
   ref.on("value", (snapshot) => {
-    const dados = snapshot.val() || {};
-    todosDados = Object.values(dados);
+    todosDadosComKey = snapshot.val() || {};
+    const todosDados = Object.values(todosDadosComKey);
 
-    // Agrupa por nick para o ranking
     const agrupado = {};
     todosDados.forEach(r => {
       const key = (r.nick || r.recrutador || "").toLowerCase();
@@ -234,18 +361,16 @@
     const ranking = Object.values(agrupado).sort((a, b) => b.geral - a.geral);
     const medalhas = ["🥇","🥈","🥉"];
 
-    // Top 3 cards
     document.getElementById("top3").innerHTML = ranking.slice(0, 3).map((p, i) =>
       `<div class="top-card">
         <div class="medal">${medalhas[i]}</div>
         <div class="nick">${p.nick}</div>
         <div class="count">${p.geral}</div>
         <div style="color:#666; font-size:11px;">recrutamentos</div>
-        ${p.evento > 0 ? `<div><span class="badge" style="margin:4px 0; display:inline-block;">🎉 evento: ${p.evento}</span></div>` : ""}
+        ${p.evento > 0 ? `<div><span class="badge" style="margin:4px 0;display:inline-block;">🎉 evento: ${p.evento}</span></div>` : ""}
       </div>`
     ).join("");
 
-    // Resto do ranking
     document.getElementById("ranking-resto").innerHTML = ranking.slice(3).map((p, i) =>
       `<div class="ranking-item">
         ${i + 4}. <strong>${p.nick}</strong> — ${p.geral} recrutamento(s)
