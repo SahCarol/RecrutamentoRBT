@@ -5,42 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recrutamentos da Tribo</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
     h1, h2 { color: #f4c430; }
-    input { padding: 8px; margin: 4px; border-radius: 6px; border: none; background: #1e1e1e; color: #eee; width: 220px; }
+    input { padding: 8px; margin: 4px; border-radius: 6px; border: none; background: #1e1e1e; color: #eee; width: 210px; }
     button { padding: 8px 16px; background: #f4c430; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 8px; }
     button:hover { background: #e0b020; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+    th, td { padding: 9px; border-bottom: 1px solid #333; text-align: left; }
     th { color: #f4c430; }
-    .ranking-item { padding: 8px 0; border-bottom: 1px solid #222; font-size: 15px; }
+    .ranking-item { padding: 8px 0; border-bottom: 1px solid #222; }
+    .badge { background: #2e4a7a; color: #7eb3ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px; }
+    .old-nick { color: #666; font-size: 12px; }
     .empty { color: #555; font-style: italic; }
+    label { color: #aaa; font-size: 12px; display: block; margin-top: 10px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
 
 <h1>🗡️ Recrutamentos da Tribo</h1>
+<p style="color:#666; font-size:13px;">Período registrado: 17/11/2025 – 14/04/2026</p>
 
 <h2>Registrar Recrutamento</h2>
-<input id="recrutador" placeholder="Quem recrutou* (ex: Moo#1234)" />
-<input id="recrutado" placeholder="Recrutado (opcional)" />
+
+<label>Nick atual *</label>
+<input id="nick" placeholder="Ex: Gabrielmrr#7842" />
+
+<label>Nick antigo (mesmo player, opcional)</label>
+<input id="nick_antigo" placeholder="Ex: Xenon#9552" />
+
+<label>Recrutamentos gerais *</label>
+<input id="geral" type="number" min="1" value="" style="width:100px" />
+
+<label>Recrutamentos de evento (opcional)</label>
+<input id="evento" type="number" min="0" value="" style="width:100px" />
+
+<label>Data (opcional)</label>
 <input id="data" type="date" />
 <br>
 <button onclick="registrar()">✅ Registrar</button>
 
+<h2>🏆 Ranking Geral</h2>
+<div id="ranking"><p class="empty">Carregando...</p></div>
+
 <h2>📋 Histórico</h2>
 <table>
-  <thead><tr><th>Recrutador</th><th>Recrutado</th><th>Data</th></tr></thead>
-  <tbody id="tabela"><tr><td colspan="3" class="empty">Nenhum registro ainda.</td></tr></tbody>
+  <thead>
+    <tr>
+      <th>Nick</th>
+      <th>Nick antigo</th>
+      <th>Geral</th>
+      <th>Evento</th>
+      <th>Data</th>
+    </tr>
+  </thead>
+  <tbody id="tabela"></tbody>
 </table>
 
-<h2>🏆 Ranking</h2>
-<div id="ranking"><p class="empty">Sem dados ainda.</p></div>
-
-<!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDhRZSebMnEgZH_PpnGDmS06efReZQhvWQ",
@@ -57,49 +79,72 @@
   const ref = db.ref("recrutamentos");
 
   function registrar() {
-    const recrutador = document.getElementById("recrutador").value.trim();
-    const recrutado = document.getElementById("recrutado").value.trim();
-    const data = document.getElementById("data").value;
+    const nick      = document.getElementById("nick").value.trim();
+    const nick_antigo = document.getElementById("nick_antigo").value.trim();
+    const geral     = parseInt(document.getElementById("geral").value) || 0;
+    const evento    = parseInt(document.getElementById("evento").value) || 0;
+    const data      = document.getElementById("data").value;
 
-    if (!recrutador) return alert("⚠️ Informe quem recrutou!");
+    if (!nick)   return alert("⚠️ Nick atual é obrigatório!");
+    if (!geral)  return alert("⚠️ Informe ao menos 1 recrutamento geral!");
 
-    ref.push({
-      recrutador,
-      recrutado: recrutado || "—",
-      data: data || "—"
+    ref.push({ nick, nick_antigo: nick_antigo || "—", geral, evento, data: data || "—" });
+
+    ["nick","nick_antigo","geral","evento","data"].forEach(id => {
+      document.getElementById(id).value = "";
     });
-
-    document.getElementById("recrutador").value = "";
-    document.getElementById("recrutado").value = "";
-    document.getElementById("data").value = "";
   }
 
   ref.on("value", (snapshot) => {
     const dados = snapshot.val() || {};
     const lista = Object.values(dados);
 
-    // Tabela (mais recentes primeiro)
-    const tabela = document.getElementById("tabela");
-    if (lista.length === 0) {
-      tabela.innerHTML = `<tr><td colspan="3" class="empty">Nenhum registro ainda.</td></tr>`;
-    } else {
-      tabela.innerHTML = [...lista].reverse().map(r =>
-        `<tr><td>${r.recrutador}</td><td>${r.recrutado}</td><td>${r.data}</td></tr>`
-      ).join("");
-    }
+    // Agrupa por nick (soma duplicatas)
+    const agrupado = {};
+    lista.forEach(r => {
+      const key = (r.nick || r.recrutador || "").toLowerCase();
+      if (!key) return;
+      if (agrupado[key]) {
+        agrupado[key].geral  += (r.geral || 0);
+        agrupado[key].evento += (r.evento || 0);
+      } else {
+        agrupado[key] = {
+          nick:       r.nick || r.recrutador || "—",
+          nick_antigo: r.nick_antigo || "—",
+          geral:      r.geral  || 0,
+          evento:     r.evento || 0
+        };
+      }
+    });
 
     // Ranking
-    const contagem = {};
-    lista.forEach(r => { contagem[r.recrutador] = (contagem[r.recrutador] || 0) + 1; });
-    const ranking = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
-    const medalhas = ["🥇", "🥈", "🥉"];
+    const ranking = Object.values(agrupado).sort((a, b) => b.geral - a.geral);
+    const medalhas = ["🥇","🥈","🥉"];
     document.getElementById("ranking").innerHTML = ranking.length === 0
       ? `<p class="empty">Sem dados ainda.</p>`
-      : ranking.map(([nome, qtd], i) =>
-          `<div class="ranking-item">${medalhas[i] || `${i+1}.`} <strong>${nome}</strong> — ${qtd} recrutamento(s)</div>`
+      : ranking.map((p, i) =>
+          `<div class="ranking-item">
+            ${medalhas[i] || `${i+1}.`}
+            <strong>${p.nick}</strong>
+            — ${p.geral} recrutamento(s)
+            ${p.evento > 0 ? `<span class="badge">🎉 evento: ${p.evento}</span>` : ""}
+          </div>`
+        ).join("");
+
+    // Tabela histórico (mais recentes primeiro)
+    const tabela = document.getElementById("tabela");
+    tabela.innerHTML = lista.length === 0
+      ? `<tr><td colspan="5" class="empty">Nenhum registro ainda.</td></tr>`
+      : [...lista].reverse().map(r =>
+          `<tr>
+            <td>${r.nick || r.recrutador || "—"}</td>
+            <td class="old-nick">${r.nick_antigo || "—"}</td>
+            <td>${r.geral ?? "—"}</td>
+            <td>${r.evento > 0 ? `<span class="badge">${r.evento}</span>` : "—"}</td>
+            <td>${r.data || "—"}</td>
+          </tr>`
         ).join("");
   });
 </script>
-
 </body>
 </html>
