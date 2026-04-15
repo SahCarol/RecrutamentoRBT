@@ -5,61 +5,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recrutamentos da Tribo</title>
   <style>
-    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; max-width: 960px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
     h1, h2 { color: #f4c430; }
-    input { padding: 8px; margin: 4px; border-radius: 6px; border: none; background: #1e1e1e; color: #eee; width: 210px; }
-    button { padding: 8px 16px; background: #f4c430; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 8px; }
+    input[type=text], input[type=date], input[type=number] {
+      padding: 8px; margin: 4px; border-radius: 6px; border: none;
+      background: #1e1e1e; color: #eee;
+    }
+    input[type=text] { width: 220px; }
+    input[type=number] { width: 100px; }
+    button {
+      padding: 8px 16px; background: #f4c430; color: #000;
+      border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
+    }
     button:hover { background: #e0b020; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
-    th, td { padding: 9px; border-bottom: 1px solid #333; text-align: left; }
-    th { color: #f4c430; }
-    .ranking-item { padding: 8px 0; border-bottom: 1px solid #222; }
-    .badge { background: #2e4a7a; color: #7eb3ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 6px; }
-    .old-nick { color: #666; font-size: 12px; }
+    button.secondary {
+      background: #2a2a2a; color: #eee; border: 1px solid #444;
+    }
+    button.secondary:hover { background: #3a3a3a; }
+    button:disabled { opacity: 0.4; cursor: default; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+    th, td { padding: 9px 10px; border-bottom: 1px solid #222; text-align: left; }
+    th { color: #f4c430; background: #141414; position: sticky; top: 0; }
+    tr:hover td { background: #1a1a1a; }
+    .ranking-item { padding: 8px 0; border-bottom: 1px solid #1e1e1e; font-size: 14px; }
+    .badge { background: #1e3a5f; color: #7eb3ff; padding: 2px 7px; border-radius: 4px; font-size: 11px; margin-left: 6px; }
+    .old-nick { color: #555; font-size: 12px; }
     .empty { color: #555; font-style: italic; }
-    label { color: #aaa; font-size: 12px; display: block; margin-top: 10px; margin-bottom: 2px; }
+    label { color: #888; font-size: 12px; display: block; margin-top: 10px; margin-bottom: 2px; }
+    .search-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .search-bar input[type=text] { width: 260px; }
+    .pagination { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .pagination span { color: #888; font-size: 13px; }
+    .info-bar { color: #666; font-size: 12px; margin-bottom: 4px; }
+    .top-ranking { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+    .top-card { background: #1a1a1a; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #2a2a2a; }
+    .top-card .medal { font-size: 24px; }
+    .top-card .nick { font-size: 13px; font-weight: bold; color: #f4c430; margin: 4px 0; word-break: break-all; }
+    .top-card .count { font-size: 20px; font-weight: bold; }
+    details summary { cursor: pointer; color: #f4c430; font-size: 15px; font-weight: bold; margin: 16px 0 8px; user-select: none; }
+    details summary::marker { color: #f4c430; }
   </style>
 </head>
 <body>
 
 <h1>🗡️ Recrutamentos da Tribo</h1>
-<p style="color:#666; font-size:13px;">Período registrado: 17/11/2025 – 14/04/2026</p>
+<p style="color:#555; font-size:12px;">Período registrado: 17/11/2025 – 14/04/2026</p>
 
-<h2>Registrar Recrutamento</h2>
+<details>
+  <summary>➕ Registrar Recrutamento</summary>
+  <div style="padding: 8px 0 16px;">
+    <label>Nick atual *</label>
+    <input type="text" id="nick" placeholder="Ex: Gabrielmrr#7842" />
 
-<label>Nick atual *</label>
-<input id="nick" placeholder="Ex: Gabrielmrr#7842" />
+    <label>Nick antigo (mesmo player, opcional)</label>
+    <input type="text" id="nick_antigo" placeholder="Ex: Xenon#9552" />
 
-<label>Nick antigo (mesmo player, opcional)</label>
-<input id="nick_antigo" placeholder="Ex: Xenon#9552" />
+    <label>Recrutamentos gerais *</label>
+    <input type="number" id="geral" min="1" placeholder="0" />
 
-<label>Recrutamentos gerais *</label>
-<input id="geral" type="number" min="1" value="" style="width:100px" />
+    <label>Recrutamentos de evento (opcional)</label>
+    <input type="number" id="evento" min="0" placeholder="0" />
 
-<label>Recrutamentos de evento (opcional)</label>
-<input id="evento" type="number" min="0" value="" style="width:100px" />
-
-<label>Data (opcional)</label>
-<input id="data" type="date" />
-<br>
-<button onclick="registrar()">✅ Registrar</button>
+    <label>Data (opcional)</label>
+    <input type="date" id="data" />
+    <br><br>
+    <button onclick="registrar()">✅ Registrar</button>
+  </div>
+</details>
 
 <h2>🏆 Ranking Geral</h2>
-<div id="ranking"><p class="empty">Carregando...</p></div>
+<div class="top-ranking" id="top3"></div>
+<div id="ranking-resto"></div>
 
 <h2>📋 Histórico</h2>
+<div class="search-bar">
+  <input type="text" id="busca" placeholder="🔍 Buscar nick..." oninput="filtrar()" />
+  <select id="ordenar" onchange="filtrar()" style="padding:8px; background:#1e1e1e; color:#eee; border:none; border-radius:6px;">
+    <option value="recente">Mais recentes</option>
+    <option value="maior">Maior geral</option>
+    <option value="menor">Menor geral</option>
+    <option value="az">A → Z</option>
+  </select>
+  <button class="secondary" onclick="limparBusca()">✕ Limpar</button>
+</div>
+<div class="info-bar" id="info-bar"></div>
+
 <table>
   <thead>
     <tr>
-      <th>Nick</th>
-      <th>Nick antigo</th>
-      <th>Geral</th>
-      <th>Evento</th>
-      <th>Data</th>
+      <th>#</th><th>Nick</th><th>Nick antigo</th><th>Geral</th><th>Evento</th><th>Data</th>
     </tr>
   </thead>
   <tbody id="tabela"></tbody>
 </table>
+
+<div class="pagination" id="paginacao"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -78,72 +119,141 @@
   const db = firebase.database();
   const ref = db.ref("recrutamentos");
 
+  let todosDados = [];
+  let paginaAtual = 1;
+  const POR_PAGINA = 30;
+
   function registrar() {
-    const nick      = document.getElementById("nick").value.trim();
+    const nick       = document.getElementById("nick").value.trim();
     const nick_antigo = document.getElementById("nick_antigo").value.trim();
-    const geral     = parseInt(document.getElementById("geral").value) || 0;
-    const evento    = parseInt(document.getElementById("evento").value) || 0;
-    const data      = document.getElementById("data").value;
-
-    if (!nick)   return alert("⚠️ Nick atual é obrigatório!");
-    if (!geral)  return alert("⚠️ Informe ao menos 1 recrutamento geral!");
-
+    const geral      = parseInt(document.getElementById("geral").value) || 0;
+    const evento     = parseInt(document.getElementById("evento").value) || 0;
+    const data       = document.getElementById("data").value;
+    if (!nick)  return alert("⚠️ Nick atual é obrigatório!");
+    if (!geral) return alert("⚠️ Informe ao menos 1 recrutamento geral!");
     ref.push({ nick, nick_antigo: nick_antigo || "—", geral, evento, data: data || "—" });
+    ["nick","nick_antigo","geral","evento","data"].forEach(id => document.getElementById(id).value = "");
+  }
 
-    ["nick","nick_antigo","geral","evento","data"].forEach(id => {
-      document.getElementById(id).value = "";
+  function limparBusca() {
+    document.getElementById("busca").value = "";
+    filtrar();
+  }
+
+  function filtrar() {
+    paginaAtual = 1;
+    renderTabela();
+  }
+
+  function renderTabela() {
+    const termo = document.getElementById("busca").value.toLowerCase();
+    const ordem = document.getElementById("ordenar").value;
+
+    let lista = [...todosDados].filter(r => {
+      const nick = (r.nick || r.recrutador || "").toLowerCase();
+      const ant  = (r.nick_antigo || "").toLowerCase();
+      return nick.includes(termo) || ant.includes(termo);
     });
+
+    if (ordem === "recente") lista.reverse();
+    else if (ordem === "maior") lista.sort((a, b) => (b.geral || 0) - (a.geral || 0));
+    else if (ordem === "menor") lista.sort((a, b) => (a.geral || 0) - (b.geral || 0));
+    else if (ordem === "az")    lista.sort((a, b) => (a.nick || "").localeCompare(b.nick || ""));
+
+    const total = lista.length;
+    const totalPags = Math.ceil(total / POR_PAGINA);
+    const inicio = (paginaAtual - 1) * POR_PAGINA;
+    const fatia  = lista.slice(inicio, inicio + POR_PAGINA);
+
+    document.getElementById("info-bar").textContent =
+      `Exibindo ${inicio + 1}–${Math.min(inicio + POR_PAGINA, total)} de ${total} registro(s)${termo ? ` para "${termo}"` : ""}`;
+
+    const tabela = document.getElementById("tabela");
+    tabela.innerHTML = fatia.length === 0
+      ? `<tr><td colspan="6" class="empty">Nenhum resultado encontrado.</td></tr>`
+      : fatia.map((r, i) =>
+          `<tr>
+            <td style="color:#555">${inicio + i + 1}</td>
+            <td><strong>${r.nick || r.recrutador || "—"}</strong></td>
+            <td class="old-nick">${r.nick_antigo || "—"}</td>
+            <td>${r.geral ?? "—"}</td>
+            <td>${(r.evento > 0) ? `<span class="badge">🎉 ${r.evento}</span>` : "—"}</td>
+            <td>${r.data || "—"}</td>
+          </tr>`
+        ).join("");
+
+    // Paginação
+    const pag = document.getElementById("paginacao");
+    if (totalPags <= 1) { pag.innerHTML = ""; return; }
+
+    let btns = `<button class="secondary" onclick="irPara(${paginaAtual - 1})" ${paginaAtual === 1 ? "disabled" : ""}>‹ Anterior</button>`;
+
+    for (let p = 1; p <= totalPags; p++) {
+      if (p === 1 || p === totalPags || Math.abs(p - paginaAtual) <= 2) {
+        btns += `<button class="${p === paginaAtual ? "" : "secondary"}" onclick="irPara(${p})">${p}</button>`;
+      } else if (Math.abs(p - paginaAtual) === 3) {
+        btns += `<span>...</span>`;
+      }
+    }
+
+    btns += `<button class="secondary" onclick="irPara(${paginaAtual + 1})" ${paginaAtual === totalPags ? "disabled" : ""}>Próximo ›</button>`;
+    btns += `<span>Página ${paginaAtual} de ${totalPags}</span>`;
+    pag.innerHTML = btns;
+  }
+
+  function irPara(p) {
+    const termo = document.getElementById("busca").value.toLowerCase();
+    const lista = todosDados.filter(r => {
+      const nick = (r.nick || r.recrutador || "").toLowerCase();
+      return nick.includes(termo);
+    });
+    const totalPags = Math.ceil(lista.length / POR_PAGINA);
+    if (p < 1 || p > totalPags) return;
+    paginaAtual = p;
+    renderTabela();
+    window.scrollTo({ top: document.getElementById("tabela").offsetTop - 60, behavior: "smooth" });
   }
 
   ref.on("value", (snapshot) => {
     const dados = snapshot.val() || {};
-    const lista = Object.values(dados);
+    todosDados = Object.values(dados);
 
-    // Agrupa por nick (soma duplicatas)
+    // Agrupa por nick para o ranking
     const agrupado = {};
-    lista.forEach(r => {
+    todosDados.forEach(r => {
       const key = (r.nick || r.recrutador || "").toLowerCase();
       if (!key) return;
       if (agrupado[key]) {
         agrupado[key].geral  += (r.geral || 0);
         agrupado[key].evento += (r.evento || 0);
       } else {
-        agrupado[key] = {
-          nick:       r.nick || r.recrutador || "—",
-          nick_antigo: r.nick_antigo || "—",
-          geral:      r.geral  || 0,
-          evento:     r.evento || 0
-        };
+        agrupado[key] = { nick: r.nick || r.recrutador, geral: r.geral || 0, evento: r.evento || 0 };
       }
     });
 
-    // Ranking
     const ranking = Object.values(agrupado).sort((a, b) => b.geral - a.geral);
     const medalhas = ["🥇","🥈","🥉"];
-    document.getElementById("ranking").innerHTML = ranking.length === 0
-      ? `<p class="empty">Sem dados ainda.</p>`
-      : ranking.map((p, i) =>
-          `<div class="ranking-item">
-            ${medalhas[i] || `${i+1}.`}
-            <strong>${p.nick}</strong>
-            — ${p.geral} recrutamento(s)
-            ${p.evento > 0 ? `<span class="badge">🎉 evento: ${p.evento}</span>` : ""}
-          </div>`
-        ).join("");
 
-    // Tabela histórico (mais recentes primeiro)
-    const tabela = document.getElementById("tabela");
-    tabela.innerHTML = lista.length === 0
-      ? `<tr><td colspan="5" class="empty">Nenhum registro ainda.</td></tr>`
-      : [...lista].reverse().map(r =>
-          `<tr>
-            <td>${r.nick || r.recrutador || "—"}</td>
-            <td class="old-nick">${r.nick_antigo || "—"}</td>
-            <td>${r.geral ?? "—"}</td>
-            <td>${r.evento > 0 ? `<span class="badge">${r.evento}</span>` : "—"}</td>
-            <td>${r.data || "—"}</td>
-          </tr>`
-        ).join("");
+    // Top 3 cards
+    document.getElementById("top3").innerHTML = ranking.slice(0, 3).map((p, i) =>
+      `<div class="top-card">
+        <div class="medal">${medalhas[i]}</div>
+        <div class="nick">${p.nick}</div>
+        <div class="count">${p.geral}</div>
+        <div style="color:#666; font-size:11px;">recrutamentos</div>
+        ${p.evento > 0 ? `<div><span class="badge" style="margin:4px 0; display:inline-block;">🎉 evento: ${p.evento}</span></div>` : ""}
+      </div>`
+    ).join("");
+
+    // Resto do ranking
+    document.getElementById("ranking-resto").innerHTML = ranking.slice(3).map((p, i) =>
+      `<div class="ranking-item">
+        ${i + 4}. <strong>${p.nick}</strong> — ${p.geral} recrutamento(s)
+        ${p.evento > 0 ? `<span class="badge">🎉 evento: ${p.evento}</span>` : ""}
+      </div>`
+    ).join("");
+
+    renderTabela();
   });
 </script>
 </body>
