@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recrutamentos da Tribo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 16px; background: #0f0f0f; color: #eee; }
+    h1, h2 { color: #f4c430; }
+    input { padding: 8px; margin: 4px; border-radius: 6px; border: none; background: #1e1e1e; color: #eee; width: 220px; }
+    button { padding: 8px 16px; background: #f4c430; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 8px; }
+    button:hover { background: #e0b020; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; font-size: 14px; }
+    th { color: #f4c430; }
+    .ranking-item { padding: 8px 0; border-bottom: 1px solid #222; font-size: 15px; }
+    .empty { color: #555; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<h1>🗡️ Recrutamentos da Tribo</h1>
+
+<h2>Registrar Recrutamento</h2>
+<input id="recrutador" placeholder="Quem recrutou* (ex: Moo#1234)" />
+<input id="recrutado" placeholder="Recrutado (opcional)" />
+<input id="data" type="date" />
+<br>
+<button onclick="registrar()">✅ Registrar</button>
+
+<h2>📋 Histórico</h2>
+<table>
+  <thead><tr><th>Recrutador</th><th>Recrutado</th><th>Data</th></tr></thead>
+  <tbody id="tabela"><tr><td colspan="3" class="empty">Nenhum registro ainda.</td></tr></tbody>
+</table>
+
+<h2>🏆 Ranking</h2>
+<div id="ranking"><p class="empty">Sem dados ainda.</p></div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDhRZSebMnEgZH_PpnGDmS06efReZQhvWQ",
+    authDomain: "teste-3c551.firebaseapp.com",
+    databaseURL: "https://teste-3c551-default-rtdb.firebaseio.com",
+    projectId: "teste-3c551",
+    storageBucket: "teste-3c551.firebasestorage.app",
+    messagingSenderId: "828069092056",
+    appId: "1:828069092056:web:3a33996d9ddee2086795ad"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const ref = db.ref("recrutamentos");
+
+  function registrar() {
+    const recrutador = document.getElementById("recrutador").value.trim();
+    const recrutado = document.getElementById("recrutado").value.trim();
+    const data = document.getElementById("data").value;
+
+    if (!recrutador) return alert("⚠️ Informe quem recrutou!");
+
+    ref.push({
+      recrutador,
+      recrutado: recrutado || "—",
+      data: data || "—"
+    });
+
+    document.getElementById("recrutador").value = "";
+    document.getElementById("recrutado").value = "";
+    document.getElementById("data").value = "";
+  }
+
+  ref.on("value", (snapshot) => {
+    const dados = snapshot.val() || {};
+    const lista = Object.values(dados);
+
+    // Tabela (mais recentes primeiro)
+    const tabela = document.getElementById("tabela");
+    if (lista.length === 0) {
+      tabela.innerHTML = `<tr><td colspan="3" class="empty">Nenhum registro ainda.</td></tr>`;
+    } else {
+      tabela.innerHTML = [...lista].reverse().map(r =>
+        `<tr><td>${r.recrutador}</td><td>${r.recrutado}</td><td>${r.data}</td></tr>`
+      ).join("");
+    }
+
+    // Ranking
+    const contagem = {};
+    lista.forEach(r => { contagem[r.recrutador] = (contagem[r.recrutador] || 0) + 1; });
+    const ranking = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+    const medalhas = ["🥇", "🥈", "🥉"];
+    document.getElementById("ranking").innerHTML = ranking.length === 0
+      ? `<p class="empty">Sem dados ainda.</p>`
+      : ranking.map(([nome, qtd], i) =>
+          `<div class="ranking-item">${medalhas[i] || `${i+1}.`} <strong>${nome}</strong> — ${qtd} recrutamento(s)</div>`
+        ).join("");
+  });
+</script>
+
+</body>
+</html>
