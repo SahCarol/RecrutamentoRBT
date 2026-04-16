@@ -50,6 +50,7 @@
     .modal-btns { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
     .admin-bar { background: #1a1200; border: 1px solid #f4c43033; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-size: 13px; }
     .admin-indicator { color: #f4c430; font-weight: bold; }
+    .export-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -108,6 +109,11 @@
   <button class="secondary" onclick="limparBusca()">✕ Limpar</button>
 </div>
 <div class="info-bar" id="info-bar"></div>
+
+<div class="export-bar">
+  <button class="secondary" onclick="exportarTXT()">📄 Exportar .txt</button>
+  <button class="secondary" onclick="exportarCSV()">📊 Exportar .csv</button>
+</div>
 
 <table>
   <thead>
@@ -198,12 +204,12 @@
   }
 
   function registrar() {
-    const nick       = document.getElementById("nick").value.trim();
-    const recrutado  = document.getElementById("recrutado").value.trim();
+    const nick        = document.getElementById("nick").value.trim();
+    const recrutado   = document.getElementById("recrutado").value.trim();
     const nick_antigo = document.getElementById("nick_antigo").value.trim();
-    const geral      = parseInt(document.getElementById("geral").value) || 0;
-    const evento     = parseInt(document.getElementById("evento").value) || 0;
-    const data       = document.getElementById("data").value;
+    const geral       = parseInt(document.getElementById("geral").value) || 0;
+    const evento      = parseInt(document.getElementById("evento").value) || 0;
+    const data        = document.getElementById("data").value;
     if (!nick)  return alert("⚠️ Nick do recrutador é obrigatório!");
     if (!geral) return alert("⚠️ Informe ao menos 1 recrutamento!");
     ref.push({
@@ -254,7 +260,7 @@
   function excluirRegistro(key) {
     const r = todosDadosComKey[key];
     const nick = r ? (r.nick || r.recrutador || key) : key;
-    if (!confirm(`⚠️ Excluir o registro de "${nick}"?\nEssa ação não pode ser desfeita.`)) return;
+    if (!confirm("⚠️ Excluir o registro de \"" + nick + "\"?\nEssa ação não pode ser desfeita.")) return;
     db.ref("recrutamentos/" + key).remove();
   }
 
@@ -291,45 +297,42 @@
     else if (ordem === "menor") lista.sort((a, b) => (a.geral || 0) - (b.geral || 0));
     else if (ordem === "az")    lista.sort((a, b) => (a.nick || "").localeCompare(b.nick || ""));
 
-    const total = lista.length;
+    const total     = lista.length;
     const totalPags = Math.ceil(total / POR_PAGINA);
-    const inicio = (paginaAtual - 1) * POR_PAGINA;
-    const fatia  = lista.slice(inicio, inicio + POR_PAGINA);
+    const inicio    = (paginaAtual - 1) * POR_PAGINA;
+    const fatia     = lista.slice(inicio, inicio + POR_PAGINA);
 
     document.getElementById("info-bar").textContent =
-      `Exibindo ${inicio + 1}–${Math.min(inicio + POR_PAGINA, total)} de ${total} registro(s)${termo ? ` para "${termo}"` : ""}`;
+      "Exibindo " + (inicio + 1) + "–" + Math.min(inicio + POR_PAGINA, total) + " de " + total + " registro(s)" + (termo ? " para \"" + termo + "\"" : "");
 
     const tabela = document.getElementById("tabela");
     tabela.innerHTML = fatia.length === 0
-      ? `<tr><td colspan="${cols}" class="empty">Nenhum resultado encontrado.</td></tr>`
+      ? "<tr><td colspan=\"" + cols + "\" class=\"empty\">Nenhum resultado encontrado.</td></tr>"
       : fatia.map((r, i) =>
-          `<tr>
-            <td style="color:#555">${inicio + i + 1}</td>
-            <td><strong>${r.nick || r.recrutador || "—"}</strong></td>
-            <td class="recrutado-cell">${r.recrutado || "—"}</td>
-            <td class="old-nick">${r.nick_antigo || "—"}</td>
-            <td>${r.geral ?? "—"}</td>
-            <td>${(r.evento > 0) ? `<span class="badge">🎉 ${r.evento}</span>` : "—"}</td>
-            <td>${r.data || "—"}</td>
-            ${modoAdmin ? `<td style="white-space:nowrap;">
-              <button class="edit-btn" onclick="abrirModal('${r._key}')">✏️</button>
-              <button class="danger" style="padding:4px 10px;font-size:12px;margin-left:4px;" onclick="excluirRegistro('${r._key}')">🗑️</button>
-            </td>` : ""}
-          </tr>`
+          "<tr>" +
+          "<td style=\"color:#555\">" + (inicio + i + 1) + "</td>" +
+          "<td><strong>" + (r.nick || r.recrutador || "—") + "</strong></td>" +
+          "<td class=\"recrutado-cell\">" + (r.recrutado || "—") + "</td>" +
+          "<td class=\"old-nick\">" + (r.nick_antigo || "—") + "</td>" +
+          "<td>" + (r.geral != null ? r.geral : "—") + "</td>" +
+          "<td>" + (r.evento > 0 ? "<span class=\"badge\">🎉 " + r.evento + "</span>" : "—") + "</td>" +
+          "<td>" + (r.data || "—") + "</td>" +
+          (modoAdmin ? "<td style=\"white-space:nowrap;\"><button class=\"edit-btn\" onclick=\"abrirModal('" + r._key + "')\">✏️</button><button class=\"danger\" style=\"padding:4px 10px;font-size:12px;margin-left:4px;\" onclick=\"excluirRegistro('" + r._key + "')\">🗑️</button></td>" : "") +
+          "</tr>"
         ).join("");
 
     const pag = document.getElementById("paginacao");
     if (totalPags <= 1) { pag.innerHTML = ""; return; }
-    let btns = `<button class="secondary" onclick="irPara(${paginaAtual - 1})" ${paginaAtual === 1 ? "disabled" : ""}>‹ Anterior</button>`;
+    let btns = "<button class=\"secondary\" onclick=\"irPara(" + (paginaAtual - 1) + ")\" " + (paginaAtual === 1 ? "disabled" : "") + ">‹ Anterior</button>";
     for (let p = 1; p <= totalPags; p++) {
       if (p === 1 || p === totalPags || Math.abs(p - paginaAtual) <= 2) {
-        btns += `<button class="${p === paginaAtual ? "" : "secondary"}" onclick="irPara(${p})">${p}</button>`;
+        btns += "<button class=\"" + (p === paginaAtual ? "" : "secondary") + "\" onclick=\"irPara(" + p + ")\">" + p + "</button>";
       } else if (Math.abs(p - paginaAtual) === 3) {
-        btns += `<span>...</span>`;
+        btns += "<span>...</span>";
       }
     }
-    btns += `<button class="secondary" onclick="irPara(${paginaAtual + 1})" ${paginaAtual === totalPags ? "disabled" : ""}>Próximo ›</button>`;
-    btns += `<span>Página ${paginaAtual} de ${totalPags}</span>`;
+    btns += "<button class=\"secondary\" onclick=\"irPara(" + (paginaAtual + 1) + ")\" " + (paginaAtual === totalPags ? "disabled" : "") + ">Próximo ›</button>";
+    btns += "<span>Página " + paginaAtual + " de " + totalPags + "</span>";
     pag.innerHTML = btns;
   }
 
@@ -342,6 +345,81 @@
     window.scrollTo({ top: document.getElementById("tabela").offsetTop - 60, behavior: "smooth" });
   }
 
+  function exportarTXT() {
+    const dados = Object.values(todosDadosComKey);
+    const agrupado = {};
+    dados.forEach(r => {
+      const key = (r.nick || r.recrutador || "").toLowerCase();
+      if (!key) return;
+      if (agrupado[key]) {
+        agrupado[key].geral  += (r.geral  || 0);
+        agrupado[key].evento += (r.evento || 0);
+      } else {
+        agrupado[key] = { nick: r.nick || r.recrutador, geral: r.geral || 0, evento: r.evento || 0 };
+      }
+    });
+    const ranking = Object.values(agrupado).sort((a, b) => b.geral - a.geral);
+
+    const sep = "==============================================";
+    const div = "----------------------------------------------";
+    const linhas = [
+      sep,
+      "       RECRUTAMENTOS DA TRIBO — RBT",
+      "     Período: 17/11/2025 – 14/04/2026",
+      sep, "",
+      "RANKING GERAL",
+      div,
+      ...ranking.map((p, i) => {
+        const num   = String(i + 1).padStart(3, " ");
+        const nome  = p.nick.padEnd(32);
+        const ev    = p.evento > 0 ? " | Evento: " + p.evento : "";
+        return num + ". " + nome + " Geral: " + String(p.geral).padStart(4) + ev;
+      }),
+      "", sep,
+      "HISTORICO COMPLETO",
+      div,
+      "Recrutador                       | Recrutado                       | Geral | Evento | Data",
+      div,
+      ...dados.map(r => {
+        const nick = (r.nick || r.recrutador || "—").padEnd(32);
+        const rec  = (r.recrutado || "—").padEnd(32);
+        const ger  = String(r.geral || 0).padStart(5);
+        const ev   = String(r.evento || 0).padStart(6);
+        const dt   = r.data || "—";
+        return nick + " | " + rec + " | " + ger + " | " + ev + " | " + dt;
+      }),
+      "",
+      "Exportado em: " + new Date().toLocaleString("pt-BR"),
+      sep
+    ];
+
+    const blob = new Blob([linhas.join("\n")], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "recrutamentos-rbt.txt";
+    a.click();
+  }
+
+  function exportarCSV() {
+    const dados = Object.values(todosDadosComKey);
+    const header = ["Recrutador","Recrutado","Nick Antigo","Geral","Evento","Data"];
+    const linhas = dados.map(r => [
+      r.nick || r.recrutador || "",
+      r.recrutado || "",
+      r.nick_antigo || "",
+      r.geral || 0,
+      r.evento || 0,
+      r.data || ""
+    ].map(v => "\"" + String(v).replace(/"/g, "\"\"") + "\"").join(","));
+
+    const csv = [header.join(","), ...linhas].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "recrutamentos-rbt.csv";
+    a.click();
+  }
+
   ref.on("value", (snapshot) => {
     todosDadosComKey = snapshot.val() || {};
     const todosDados = Object.values(todosDadosComKey);
@@ -351,31 +429,31 @@
       const key = (r.nick || r.recrutador || "").toLowerCase();
       if (!key) return;
       if (agrupado[key]) {
-        agrupado[key].geral  += (r.geral || 0);
+        agrupado[key].geral  += (r.geral  || 0);
         agrupado[key].evento += (r.evento || 0);
       } else {
         agrupado[key] = { nick: r.nick || r.recrutador, geral: r.geral || 0, evento: r.evento || 0 };
       }
     });
 
-    const ranking = Object.values(agrupado).sort((a, b) => b.geral - a.geral);
+    const ranking  = Object.values(agrupado).sort((a, b) => b.geral - a.geral);
     const medalhas = ["🥇","🥈","🥉"];
 
     document.getElementById("top3").innerHTML = ranking.slice(0, 3).map((p, i) =>
-      `<div class="top-card">
-        <div class="medal">${medalhas[i]}</div>
-        <div class="nick">${p.nick}</div>
-        <div class="count">${p.geral}</div>
-        <div style="color:#666; font-size:11px;">recrutamentos</div>
-        ${p.evento > 0 ? `<div><span class="badge" style="margin:4px 0;display:inline-block;">🎉 evento: ${p.evento}</span></div>` : ""}
-      </div>`
+      "<div class=\"top-card\">" +
+      "<div class=\"medal\">" + medalhas[i] + "</div>" +
+      "<div class=\"nick\">" + p.nick + "</div>" +
+      "<div class=\"count\">" + p.geral + "</div>" +
+      "<div style=\"color:#666; font-size:11px;\">recrutamentos</div>" +
+      (p.evento > 0 ? "<div><span class=\"badge\" style=\"margin:4px 0;display:inline-block;\">🎉 evento: " + p.evento + "</span></div>" : "") +
+      "</div>"
     ).join("");
 
     document.getElementById("ranking-resto").innerHTML = ranking.slice(3).map((p, i) =>
-      `<div class="ranking-item">
-        ${i + 4}. <strong>${p.nick}</strong> — ${p.geral} recrutamento(s)
-        ${p.evento > 0 ? `<span class="badge">🎉 evento: ${p.evento}</span>` : ""}
-      </div>`
+      "<div class=\"ranking-item\">" +
+      (i + 4) + ". <strong>" + p.nick + "</strong> — " + p.geral + " recrutamento(s)" +
+      (p.evento > 0 ? "<span class=\"badge\">🎉 evento: " + p.evento + "</span>" : "") +
+      "</div>"
     ).join("");
 
     renderTabela();
